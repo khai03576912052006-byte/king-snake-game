@@ -32,7 +32,7 @@ button.primary{background:linear-gradient(180deg,#ffd966,#f29a2e);color:#29203b;
 .stage{position:relative;background:#0c1429;border:3px solid #7184bd;border-radius:16px;overflow:hidden;box-shadow:0 18px 45px #0008}
 canvas{display:block;width:100%;height:auto;aspect-ratio:900/540;touch-action:none}
 .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#08102778;padding:18px}
-.overlay.hidden{display:none}
+#overlay.hidden{display:none !important;visibility:hidden;pointer-events:none}
 .dialog{max-width:430px;width:100%;text-align:center;background:linear-gradient(145deg,#273765,#141d3d);border:1px solid #ffffff35;border-radius:20px;padding:24px;box-shadow:0 20px 60px #0009}
 .dialog h2{margin:0 0 8px;color:var(--gold);font-size:clamp(25px,5vw,38px)}
 .dialog p{color:#dce4ff;line-height:1.5}
@@ -144,7 +144,8 @@ function makeObstacles(n,s){
 }
 function makeFood(){let blocked=new Set([...snake,...obstacles].map(key));return freeCell(blocked)}
 function reset(){
- level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;nameVisibleUntil=performance.now()+2200;overlay(false);notify("BẮT ĐẦU · "+playerName);updateHud();draw(0);playMusicStart();
+ overlay(false);
+ level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;nameVisibleUntil=performance.now()+2200;notify("BẮT ĐẦU · "+playerName);updateHud();draw(0);playMusicStart();
 }
 function notify(message,duration=650){
  const el=$('toast');if(!el)return;
@@ -160,7 +161,7 @@ function saveSnakeName(){
  notify("Đã lưu tên: "+playerName);
 }
 function updateHud(){$('score').textContent=score;$('level').textContent=(level+1)+"/10";$('eaten').textContent=eaten+"/"+foodTarget(level);$('theme').textContent=themes[level].name;$('autoBtn').textContent=auto?"🤖 AUTO: BẬT":"🤖 AUTO: TẮT";$('soundBtn').textContent=soundOn?"🔊 ÂM THANH":"🔇 TẮT TIẾNG"}
-function overlay(show,title,text,button){$('overlay').classList.toggle('hidden',!show);if(title)$('dialogTitle').textContent=title;if(text)$('dialogText').textContent=text;if(button)$('startBtn').textContent=button}
+function overlay(show,title,text,button){const panel=$('overlay');panel.classList.toggle('hidden',!show);panel.setAttribute('aria-hidden',String(!show));if(title)$('dialogTitle').textContent=title;if(text)$('dialogText').textContent=text;if(button)$('startBtn').textContent=button}
 function initAudio(){if(!audio){try{audio=new(window.AudioContext||window.webkitAudioContext)()}catch(e){soundOn=false}}if(audio&&audio.state==="suspended")audio.resume()}
 function tone(freq,dur=.12,type="sine",vol=.045){if(!soundOn)return;initAudio();if(!audio)return;let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(vol,audio.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur+.02)}
 function playMusicStart(){if(soundOn){tone(440,.10);setTimeout(()=>tone(554,.12),100);setTimeout(()=>tone(659,.18),220)}}
@@ -264,7 +265,7 @@ function toggleAuto(){if(!playing||paused||gameOver)return;auto=!auto;updateHud(
 $('saveNameBtn').addEventListener('click',saveSnakeName);
 $('snakeNameInput').value=playerName;
 $('snakeNameInput').addEventListener('keydown',e=>{if(e.key==="Enter"){e.preventDefault();saveSnakeName()}});
-$('startBtn').addEventListener('click',()=>{initAudio();reset()});
+$('startBtn').addEventListener('click',()=>{overlay(false);$('overlay').setAttribute('aria-hidden','true');initAudio();reset()});
 $('restartBtn').addEventListener('click',()=>{initAudio();reset()});
 $('pauseBtn').addEventListener('click',pauseToggle);
 $('autoBtn').addEventListener('click',toggleAuto);
