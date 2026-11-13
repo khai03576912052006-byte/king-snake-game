@@ -46,8 +46,8 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 
 /* MUSIC PICKER */
 .music-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:13px 15px;border:1px solid #34436d;border-radius:15px;background:linear-gradient(135deg,#121d3c,#20264b)}
-.music-panel label{font-weight:800;color:#ffe078;font-size:13px}.music-panel select{flex:1;min-width:180px;background:#0b1430;color:#fff;border:1px solid #596b9b;border-radius:9px;padding:10px;font:inherit}.music-panel button{padding:10px 13px}.music-note{width:100%;font-size:11px;color:#aeb9da;margin:0}.music-player-wrap{width:360px;max-width:100%;height:203px;min-height:200px;border-radius:10px;overflow:hidden;background:#050914;flex:0 0 auto}.music-player-wrap iframe{display:block;width:100%;height:100%;min-height:200px;border:0}
-@media(max-width:560px){.music-panel{gap:8px}.music-panel select{flex-basis:100%}.music-panel button{flex:1}.music-player-wrap{width:100%;max-width:360px;height:203px;min-height:200px}}
+.music-panel label{font-weight:800;color:#ffe078;font-size:13px}.music-panel select{flex:1;min-width:180px;background:#0b1430;color:#fff;border:1px solid #596b9b;border-radius:9px;padding:10px;font:inherit}.music-panel button{padding:10px 13px}.music-note{width:100%;font-size:11px;color:#aeb9da;margin:0}.music-player-wrap{width:200px;max-width:100%;height:200px;min-height:200px;border-radius:10px;overflow:hidden;background:#050914;flex:0 0 auto}.music-player-wrap iframe{display:block;width:100%;height:100%;min-height:200px;border:0;pointer-events:none}
+@media(max-width:560px){.music-panel{gap:8px}.music-panel select{flex-basis:100%}.music-panel button{flex:1;min-height:44px}.music-player-wrap{width:200px;height:200px;min-height:200px;max-width:100%;margin:4px auto 0}}
 </style>
 </head>
 <body>
@@ -88,7 +88,7 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
  <button id="saveMusicBtn" type="button">💾 LƯU BÀI HÁT</button>
  <button id="musicToggleBtn" type="button">▶ PHÁT NHẠC</button>
  <p class="music-note" id="musicStatus">Chọn bài hát và lưu trước khi bắt đầu. Lựa chọn sẽ được ghi nhớ trên thiết bị này.</p>
- <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="360" height="203" src="https://www.youtube.com/embed/WX7dUj14Z00?enablejsapi=1&controls=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+ <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="200" height="200" src="https://www.youtube.com/embed/WX7dUj14Z00?enablejsapi=1&controls=0&rel=0&playsinline=1&fs=0&disablekb=1" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
 </section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
@@ -205,11 +205,11 @@ function updateMusicStatus(message){const el=$('musicStatus');if(el)el.textConte
 function initYouTubePlayer(){
  window.onYouTubeIframeAPIReady=function(){
   try{
-   ytPlayer=new YT.Player('musicPlayer',{height:'203',width:'360',videoId:musicTracks[selectedMusic],playerVars:{autoplay:0,controls:1,playsinline:1,rel:0,enablejsapi:1,origin:window.location.origin},events:{
-    onReady:function(){ytReady=true;ytLoadedTrack=selectedMusic;updateMusicStatus("Đã có 18 bài hát. Chọn bài, lưu rồi nhấn PHÁT NHẠC để nghe.");},
-    onStateChange:function(e){if(e.data===YT.PlayerState.PLAYING){$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang phát: "+$('musicSelect').selectedOptions[0].text)}else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){$('musicToggleBtn').textContent="▶ PHÁT NHẠC"}},
+   ytPlayer=new YT.Player('musicPlayer',{height:'203',width:'360',videoId:musicTracks[selectedMusic],playerVars:{autoplay:0,controls:0,playsinline:1,fs:0,disablekb:1,rel:0,enablejsapi:1,origin:window.location.origin},events:{
+    onReady:function(){ytReady=true;ytLoadedTrack=selectedMusic;updateMusicStatus("Trình phát đã sẵn sàng. Chọn bài, lưu rồi nhấn PHÁT NHẠC. Khi nhạc chạy, bạn có thể cuộn xuống và chơi game.");},
+    onStateChange:function(e){if(e.data===YT.PlayerState.PLAYING){$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang phát: "+$('musicSelect').selectedOptions[0].text+" · Nhạc chạy độc lập với game.")}else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){$('musicToggleBtn').textContent="▶ PHÁT NHẠC"}},
     onError:function(e){const msg=({2:"Mã 2: mã video không hợp lệ.",5:"Mã 5: video không phát được trong trình phát HTML5.",100:"Mã 100: video đã bị xóa hoặc đặt riêng tư.",101:"Mã 101: chủ video không cho phép nhúng.",150:"Mã 150: chủ video không cho phép nhúng.",153:"Mã 153: thiếu thông tin nhận diện trang web."})[e.data]||("Mã lỗi "+e.data);updateMusicStatus("YouTube: "+msg+" Hãy chọn bài khác hoặc mở video trên YouTube.")},
-    onAutoplayBlocked:function(){updateMusicStatus("Trình duyệt đã chặn tự phát. Hãy nhấn nút PHÁT NHẠC hoặc nút ▶ ngay trên khung video.")}
+    onAutoplayBlocked:function(){updateMusicStatus("Điện thoại đã chặn tự phát. Hãy nhấn nút PHÁT NHẠC một lần; sau đó cuộn xuống chơi game, không cần mở khung video.")}
    }});
   }catch(err){updateMusicStatus("Không khởi tạo được YouTube. Hãy tải lại trang và kiểm tra kết nối mạng.")}
  };
@@ -233,7 +233,7 @@ function saveMusicSelection(){
  if(ytReady)updateMusicStatus("Đã lưu: "+$('musicSelect').selectedOptions[0].text+". Nhấn PHÁT NHẠC để nghe.");
  notify("Đã lưu lựa chọn nhạc nền");
 }
-function startBackgroundMusic(){if(!soundOn)return;if(ytReady&&ytPlayer)playSelectedTrack();else updateMusicStatus("Game đã bắt đầu. Chờ trình phát sẵn sàng rồi nhấn PHÁT NHẠC.")}
+function startBackgroundMusic(){/* Nhạc được bật/tắt độc lập bằng nút PHÁT NHẠC; không tự khởi chạy khi reset game. */}
 function toggleBackgroundMusic(){
  if(!ytReady||!ytPlayer){updateMusicStatus("Trình phát chưa sẵn sàng. Chờ vài giây rồi nhấn lại.");return}
  if(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();$('musicToggleBtn').textContent="▶ PHÁT NHẠC";updateMusicStatus("Nhạc nền đang tạm dừng.")}
@@ -243,7 +243,7 @@ initYouTubePlayer();
 function eatSound(){tone(720,.08,"triangle");setTimeout(()=>tone(980,.10,"sine"),55)}
 function levelSound(){[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle"),i*100))}
 function endSound(win){if(win){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.22),i*140))}else{[330,260,190].forEach((f,i)=>setTimeout(()=>tone(f,.28,"sawtooth"),i*180))}}
-function toggleSound(){soundOn=!soundOn;if(soundOn){playMusicStart();if(playing&&!paused&&ytReady&&ytPlayer&&ytPlayer.getPlayerState()!==YT.PlayerState.PLAYING)playSelectedTrack()}else if(ytReady&&ytPlayer){ytPlayer.pauseVideo()}updateHud()}
+function toggleSound(){soundOn=!soundOn;if(soundOn)playMusicStart();updateHud()}
 function spawn(p,colors){for(let i=0;i<22;i++){let a=Math.random()*Math.PI*2,v=1+Math.random()*4;particles.push({x:p[0]*CELL+15,y:p[1]*CELL+15,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:35+randInt(20),c:colors[randInt(colors.length)],r:2+Math.random()*3})}}
 function bfs(start,goal,blocked){
  let q=[start],prev=new Map([[key(start),null]]);
@@ -335,7 +335,7 @@ function draw(t){
  drawPlayerName();
 }
 function loop(ts){if(!last)last=ts;let dt=Math.min(50,ts-last);last=ts;if(playing&&!paused&&!gameOver){acc+=dt;let speed=8*.8*Math.pow(1.05,level),interval=1000/speed;if(acc>=interval){acc=0;step()}}draw(ts);requestAnimationFrame(loop)}
-function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG";if(ytReady&&ytPlayer){if(paused)ytPlayer.pauseVideo();else if(soundOn)ytPlayer.playVideo()}}
+function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG"}
 function toggleAuto(){if(!playing||paused||gameOver)return;auto=!auto;updateHud()}
 $('saveNameBtn').addEventListener('click',saveSnakeName);
 $('musicSelect').value=selectedMusic;
