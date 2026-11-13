@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10152d">
+<title>KING SNAKE – Bản chơi ngoại tuyến</title>
+<style>
+:root{--bg:#0b1023;--panel:#151d3b;--gold:#ffd45c;--muted:#aeb9dc}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#263568,#0b1023 65%);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif;display:flex;justify-content:center;padding:16px}
+.app{width:min(100%,980px)}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px}
+h1{font-size:clamp(22px,4vw,34px);margin:0;color:var(--gold);letter-spacing:2px;text-shadow:0 3px 14px #ffb52b55}
+.sub{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:1px solid #ffffff30;background:linear-gradient(180deg,#344477,#202c55);color:white;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #111a37;touch-action:manipulation}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #111a37}
+button.primary{background:linear-gradient(180deg,#ffd966,#f29a2e);color:#29203b;border:0}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.stat{background:#151d3be8;border:1px solid #ffffff18;border-radius:12px;padding:8px 12px;min-width:0}
+.stat small{display:block;color:#aeb9dc;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.stat b{font-size:clamp(15px,2.8vw,22px)}
+.stage{position:relative;background:#0c1429;border:3px solid #7184bd;border-radius:16px;overflow:hidden;box-shadow:0 18px 45px #0008}
+canvas{display:block;width:100%;height:auto;aspect-ratio:900/540;touch-action:none}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#08102778;padding:18px}
+.overlay.hidden{display:none}
+.dialog{max-width:430px;width:100%;text-align:center;background:linear-gradient(145deg,#273765,#141d3d);border:1px solid #ffffff35;border-radius:20px;padding:24px;box-shadow:0 20px 60px #0009}
+.dialog h2{margin:0 0 8px;color:var(--gold);font-size:clamp(25px,5vw,38px)}
+.dialog p{color:#dce4ff;line-height:1.5}
+.controls{display:flex;justify-content:center;align-items:center;gap:18px;margin:14px auto 0;flex-wrap:wrap}
+.dpad{display:grid;grid-template-columns:repeat(3,76px);grid-template-rows:repeat(2,54px);gap:7px}
+.dpad button{font-size:23px;padding:0;border-radius:13px}
+.dpad .up{grid-column:2}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}
+.help{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin:10px 0}
+footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
+@media(max-width:560px){body{padding:9px}.hud{grid-template-columns:repeat(2,1fr)}.controls{gap:12px}.dpad{grid-template-columns:repeat(3,82px);grid-template-rows:repeat(2,60px);gap:8px}.dpad button{font-size:28px;min-width:82px;min-height:60px}.controls>.actions button{min-height:44px}.actions button{padding:9px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div><h1>👑 KING SNAKE</h1><div class="sub">10 VÒNG THỬ THÁCH · BẢN CHƠI TRÊN WEB</div></div>
+ <div class="actions">
+  <button id="autoBtn">🤖 AUTO: TẮT</button><button id="soundBtn">🔊 ÂM THANH</button>
+ </div>
+</header>
+<section class="hud">
+ <div class="stat"><small>Điểm</small><b id="score">0</b></div>
+ <div class="stat"><small>Vòng</small><b id="level">1/10</b></div>
+ <div class="stat"><small>Đã ăn</small><b id="eaten">0/5</b></div>
+ <div class="stat"><small>Chủ đề</small><b id="theme">RỪNG XANH</b></div>
+</section>
+<div class="stage">
+ <canvas id="game" width="900" height="540" aria-label="Màn hình trò chơi KING SNAKE"></canvas>
+ <div class="overlay" id="overlay"><div class="dialog">
+  <h2 id="dialogTitle">KING SNAKE</h2><p id="dialogText">Ăn đủ mồi để vượt qua 10 vòng. Tránh tường, thân rắn và chướng ngại vật!</p>
+  <button class="primary" id="startBtn">▶ BẮT ĐẦU CHƠI</button>
+ </div></div>
+</div>
+<div class="controls">
+ <div class="dpad">
+  <button class="up" data-dir="up" aria-label="Lên">▲</button>
+  <button class="left" data-dir="left" aria-label="Trái">◀</button>
+  <button class="down" data-dir="down" aria-label="Xuống">▼</button>
+  <button class="right" data-dir="right" aria-label="Phải">▶</button>
+ </div>
+ <div class="actions" style="justify-content:center">
+  <button id="restartBtn">↻ CHƠI LẠI</button><button id="pauseBtn">Ⅱ TẠM DỪNG</button>
+ </div>
+</div>
+<p class="help">Điều khiển: phím mũi tên / WASD hoặc nút cảm ứng · M: bật/tắt Auto AI · N: bật/tắt âm thanh · P: tạm dừng</p>
+<footer>KING SNAKE · Có thể chơi trên máy tính, điện thoại và máy tính bảng · Không cần cài đặt</footer>
+</div>
+<script>
+(()=>{
+"use strict";
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+// Tuong thich trinh duyet cu: bo sung roundRect neu canvas chua ho tro
+if(!CanvasRenderingContext2D.prototype.roundRect){
+ CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+  r=Math.min(Number(r)||0,w/2,h/2);this.beginPath();this.moveTo(x+r,y);
+  this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);
+  this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);
+  this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();return this;
+ };
+}
+const W=900,H=540,CELL=30,COLS=30,ROWS=18;
+const MIN_X=1,MAX_X=COLS-2,MIN_Y=1,MAX_Y=ROWS-2;
+const $=id=>document.getElementById(id);
+const themes=[
+{name:"RỪNG XANH",bg:"#32af69",bg2:"#0c5546",snake:"#ffdc46",snake2:"#ff783c",head:"#fffac0",food:"#ff5a96",grass:"#64e65a",obstacle:"stump",speed:8},
+{name:"SA MẠC LỬA",bg:"#ff9646",bg2:"#963264",snake:"#ffd746",snake2:"#ff5096",head:"#fffab4",food:"#50e6ff",grass:"#f0be46",obstacle:"cactus",speed:9},
+{name:"VỰC ĐỘC TỐI",bg:"#3e2464",bg2:"#0e302a",snake:"#d264ff",snake2:"#ff6edc",head:"#f5c8ff",food:"#6eff82",grass:"#96eb50",obstacle:"mushroom",speed:10},
+{name:"HÀM LỬA",bg:"#d74137",bg2:"#460f28",snake:"#ff8c32",snake2:"#ffeb46",head:"#ffe18c",food:"#50e6ff",grass:"#ff7d28",obstacle:"lava",speed:11},
+{name:"RỪNG PHA LÊ",bg:"#28b4dc",bg2:"#193c8c",snake:"#ff82dc",snake2:"#aa82ff",head:"#ffe1fa",food:"#fff05a",grass:"#82fff0",obstacle:"crystal",speed:12},
+{name:"SA MẠC BÃO TỐ",bg:"#ebb946",bg2:"#8c552d",snake:"#fff55a",snake2:"#ff823c",head:"#ffffc8",food:"#ff3c82",grass:"#ebcd6e",obstacle:"rock",speed:13},
+{name:"MÊ CUNG BĂNG",bg:"#6eb4ff",bg2:"#2d4baf",snake:"#ff82c8",snake2:"#ffd75a",head:"#ffffff",food:"#ff963c",grass:"#e1f7ff",obstacle:"ice",speed:14},
+{name:"THỬ THÁCH CUỐI",bg:"#7d2373",bg2:"#190a37",snake:"#ff6ed2",snake2:"#ffd25a",head:"#ffdced",food:"#78ffd2",grass:"#ff78dc",obstacle:"spike",speed:15},
+{name:"VƯƠNG QUỐC RẮN",bg:"#23b4aa",bg2:"#194178",snake:"#ffaa46",snake2:"#ff5f8c",head:"#ffebb4",food:"#fff578",grass:"#6effbe",obstacle:"scale",speed:16},
+{name:"KING SNAKE",bg:"#9650dc",bg2:"#fa73a0",snake:"#ffc828",snake2:"#ff50a0",head:"#ffffc8",food:"#50ffd2",grass:"#ffe15a",obstacle:"crown",speed:17}
+];
+let snake,dir,nextDir,level,score,eaten,obstacles,food,auto=false,playing=false,paused=false,gameOver=false,won=false;
+let last=0,acc=0,particles=[],ambient=[],soundOn=true,audio=null,levelBanner=0;
+const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+const eq=(a,b)=>a&&b&&a[0]===b[0]&&a[1]===b[1];
+const key=p=>p[0]+","+p[1];
+function foodTarget(l){return 5+l*5}
+function obstacleCount(l){return 5+l*2}
+function inside(p){return p[0]>=MIN_X&&p[0]<=MAX_X&&p[1]>=MIN_Y&&p[1]<=MAX_Y}
+function randInt(n){return Math.floor(Math.random()*n)}
+function randCell(){return [MIN_X+randInt(MAX_X-MIN_X+1),MIN_Y+randInt(MAX_Y-MIN_Y+1)]}
+function freeCell(blocked){for(let i=0;i<5000;i++){let p=randCell();if(!blocked.has(key(p)))return p}return null}
+function connected(obs,start){
+ const blocked=new Set(obs.map(key)),seen=new Set([key(start)]),q=[start];
+ for(let i=0;i<q.length;i++){let p=q[i];for(let d of Object.values(dirs)){let n=[p[0]+d[0],p[1]+d[1]],k=key(n);if(inside(n)&&!blocked.has(k)&&!seen.has(k)){seen.add(k);q.push(n)}}}
+ let total=(MAX_X-MIN_X+1)*(MAX_Y-MIN_Y+1)-blocked.size;return seen.size===total;
+}
+function makeObstacles(n,s){
+ const h=s[0],chosen=[];
+ for(let attempt=0;attempt<100;attempt++){
+  chosen.length=0;let used=new Set(s.map(key));
+  for(let i=0;i<n*5&&chosen.length<n;i++){let p=randCell();if(!used.has(key(p))&&Math.abs(p[0]-h[0])+Math.abs(p[1]-h[1])>=5){used.add(key(p));chosen.push(p)}}
+  if(chosen.length===n&&connected(chosen,h))return chosen;
+ }
+ return chosen;
+}
+function makeFood(){let blocked=new Set([...snake,...obstacles].map(key));return freeCell(blocked)}
+function reset(){
+ level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;overlay(false);updateHud();draw(0);playMusicStart();
+}
+function updateHud(){$('score').textContent=score;$('level').textContent=(level+1)+"/10";$('eaten').textContent=eaten+"/"+foodTarget(level);$('theme').textContent=themes[level].name;$('autoBtn').textContent=auto?"🤖 AUTO: BẬT":"🤖 AUTO: TẮT";$('soundBtn').textContent=soundOn?"🔊 ÂM THANH":"🔇 TẮT TIẾNG"}
+function overlay(show,title,text,button){$('overlay').classList.toggle('hidden',!show);if(title)$('dialogTitle').textContent=title;if(text)$('dialogText').textContent=text;if(button)$('startBtn').textContent=button}
+function initAudio(){if(!audio){try{audio=new(window.AudioContext||window.webkitAudioContext)()}catch(e){soundOn=false}}if(audio&&audio.state==="suspended")audio.resume()}
+function tone(freq,dur=.12,type="sine",vol=.045){if(!soundOn)return;initAudio();if(!audio)return;let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(vol,audio.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur+.02)}
+function playMusicStart(){if(soundOn){tone(440,.10);setTimeout(()=>tone(554,.12),100);setTimeout(()=>tone(659,.18),220)}}
+function eatSound(){tone(720,.08,"triangle");setTimeout(()=>tone(980,.10,"sine"),55)}
+function levelSound(){[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle"),i*100))}
+function endSound(win){if(win){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.22),i*140))}else{[330,260,190].forEach((f,i)=>setTimeout(()=>tone(f,.28,"sawtooth"),i*180))}}
+function toggleSound(){soundOn=!soundOn;if(soundOn)playMusicStart();updateHud()}
+function spawn(p,colors){for(let i=0;i<22;i++){let a=Math.random()*Math.PI*2,v=1+Math.random()*4;particles.push({x:p[0]*CELL+15,y:p[1]*CELL+15,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:35+randInt(20),c:colors[randInt(colors.length)],r:2+Math.random()*3})}}
+function bfs(start,goal,blocked){
+ let q=[start],prev=new Map([[key(start),null]]);
+ for(let i=0;i<q.length;i++){let p=q[i];if(eq(p,goal))break;for(let d of Object.values(dirs)){let n=[p[0]+d[0],p[1]+d[1]],k=key(n);if(!inside(n)||blocked.has(k)||prev.has(k))continue;prev.set(k,key(p));q.push(n)}}
+ if(!prev.has(key(goal)))return null;let path=[],cur=key(goal);while(cur!==key(start)){let [x,y]=cur.split(',').map(Number);path.push([x,y]);cur=prev.get(cur)}return path.reverse();
+}
+function aiDirection(){
+ const blocked=new Set([...snake.slice(0,-1),...obstacles].map(key));
+ let path=bfs(snake[0],food,blocked);
+ if(path&&path.length){let d=[path[0][0]-snake[0][0],path[0][1]-snake[0][1]];if(!(d[0]===-dir[0]&&d[1]===-dir[1]))return d}
+ // fallback: chọn hướng an toàn có vùng trống lớn nhất
+ let choices=Object.values(dirs).filter(d=>!(d[0]===-dir[0]&&d[1]===-dir[1])).map(d=>{let n=[snake[0][0]+d[0],snake[0][1]+d[1]],b=new Set([...snake.slice(0,-1),...obstacles].map(key));b.delete(key(snake[snake.length-1]));return {d,n,area:flood(n,b)} }).filter(o=>inside(o.n)&&!o.area.blocked);
+ choices.sort((a,b)=>b.area.size-a.area.size);return choices.length?choices[0].d:null;
+}
+function flood(start,blocked){let q=[start],seen=new Set([key(start)]);for(let i=0;i<q.length;i++){let p=q[i];for(let d of Object.values(dirs)){let n=[p[0]+d[0],p[1]+d[1]],k=key(n);if(inside(n)&&!blocked.has(k)&&!seen.has(k)){seen.add(k);q.push(n)}}}return {size:seen.size,blocked:!inside(start)||blocked.has(key(start))}}
+function setDirection(d){if(!d||!playing||paused||gameOver)return;if(d[0]===-dir[0]&&d[1]===-dir[1])return;auto=false;nextDir=d;updateHud()}
+function finish(win){gameOver=true;playing=false;won=win;endSound(win);overlay(true,win?"🏆 CHIẾN THẮNG!":"💥 GAME OVER",win?"Bạn đã chinh phục cả 10 vòng KING SNAKE!":"Điểm của bạn: "+score+" · Hãy thử lại để lập kỷ lục mới.","↻ CHƠI LẠI")}
+function advanceLevel(){
+ if(level<9){level++;eaten=0;obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();levelBanner=110;levelSound();updateHud()}
+ else finish(true);
+}
+function step(){
+ if(auto){let d=aiDirection();if(!d){finish(false);return}nextDir=d}
+ dir=nextDir;let h=[snake[0][0]+dir[0],snake[0][1]+dir[1]];
+ if(!inside(h)||snake.slice(0,-1).some(p=>eq(p,h))||obstacles.some(p=>eq(p,h))){finish(false);return}
+ let growing=eq(h,food);snake.unshift(h);
+ if(growing){score+=10;eaten++;eatSound();spawn(h,[themes[level].food,themes[level].snake,themes[level].snake2,"#fff"]);if(eaten>=foodTarget(level))advanceLevel();else food=makeFood();updateHud();if(!food&&!gameOver)finish(true)}
+ else snake.pop();
+}
+function drawRounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}}
+function drawBackground(t){
+ let th=themes[level],g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,th.bg);g.addColorStop(1,th.bg2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // nền ô cỏ và lưới căn chuẩn 30px
+ for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  let edge=x===0||y===0||x===COLS-1||y===ROWS-1;
+  if(edge){ctx.fillStyle=th.bg2;ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.fillStyle=th.grass;ctx.globalAlpha=.7;ctx.fillRect(x*CELL+4,y*CELL+4,4,4);ctx.globalAlpha=1}
+  else{ctx.fillStyle=(x+y)%2?"#ffffff0b":"#00000009";ctx.fillRect(x*CELL,y*CELL,CELL,CELL)}
+ }
+ ctx.strokeStyle="#ffffff30";ctx.lineWidth=1;for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,H);ctx.stroke()}for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(W,y*CELL);ctx.stroke()}
+ // hiệu ứng môi trường theo từng vòng
+ for(let i=0;i<24;i++){let x=(i*137+t*.018*(i%2?1:-1))%W,y=(i*83+t*.025)%H;ctx.globalAlpha=.25;ctx.fillStyle=th.grass;ctx.beginPath();ctx.arc(x,y,2+(i%3),0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+}
+function drawObstacle(p,t){
+ let th=themes[level],x=p[0]*CELL,y=p[1]*CELL,s=th.obstacle;
+ ctx.save();ctx.translate(x,y);
+ if(s==="stump"){drawRounded(3,4,24,23,6,"#70432b","#e2a46a");ctx.fillStyle="#b98a58";ctx.beginPath();ctx.ellipse(15,7,10,4,0,0,Math.PI*2);ctx.fill()}
+ else if(s==="cactus"){drawRounded(9,3,12,25,6,"#168d54","#8fffa0");drawRounded(3,11,8,13,4,"#168d54");drawRounded(19,8,8,13,4,"#168d54")}
+ else if(s==="mushroom"){ctx.fillStyle="#b84bdf";ctx.beginPath();ctx.arc(15,12,12,Math.PI,0);ctx.fill();drawRounded(10,12,10,15,4,"#f4d5a5")}
+ else if(s==="lava"){ctx.fillStyle="#ffdf45";ctx.beginPath();ctx.arc(15,15,13,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f34a22";ctx.beginPath();ctx.arc(15,15,8+Math.sin(t/100)*2,0,Math.PI*2);ctx.fill()}
+ else if(s==="crystal"||s==="ice"){ctx.fillStyle=s==="ice"?"#c8f5ff":"#b5ffff";ctx.beginPath();ctx.moveTo(15,2);ctx.lineTo(27,15);ctx.lineTo(15,28);ctx.lineTo(3,15);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.stroke()}
+ else if(s==="rock"){drawRounded(2,7,26,19,8,"#777d91","#d5d9e8");ctx.fillStyle="#aeb6c8";ctx.fillRect(8,10,5,3)}
+ else if(s==="spike"){ctx.fillStyle="#e9d7ff";ctx.beginPath();ctx.moveTo(15,2);ctx.lineTo(28,27);ctx.lineTo(2,27);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff";ctx.stroke()}
+ else if(s==="scale"){drawRounded(2,3,26,24,9,"#1c9c8c","#a2fff0");ctx.strokeStyle="#b4fff0";ctx.beginPath();ctx.arc(15,15,8,0,Math.PI);ctx.stroke()}
+ else{ctx.fillStyle="#ffd84e";ctx.beginPath();ctx.moveTo(4,10);ctx.lineTo(8,2);ctx.lineTo(15,8);ctx.lineTo(22,2);ctx.lineTo(26,10);ctx.lineTo(24,26);ctx.lineTo(6,26);ctx.closePath();ctx.fill();ctx.strokeStyle="#fff3a0";ctx.stroke()}
+ ctx.restore();
+}
+function drawFood(t){
+ if(!food)return;let x=food[0]*CELL+15,y=food[1]*CELL+15;ctx.save();ctx.translate(x,y);ctx.rotate(-.35);
+ ctx.shadowColor=themes[level].food;ctx.shadowBlur=18;drawRounded(-5,-12,10,24,4,"#d6e1ed","#fff");ctx.shadowBlur=0;ctx.fillStyle=themes[level].food;ctx.fillRect(-5,-2,10,7);ctx.fillStyle="#fff";ctx.fillRect(-2,-10,3,4);ctx.restore();
+}
+function drawSnake(t){
+ let th=themes[level];
+ for(let i=snake.length-1;i>=0;i--){let p=snake[i],x=p[0]*CELL,y=p[1]*CELL,ratio=i/Math.max(1,snake.length-1),c=level===9?`hsl(${(t/8+i*13)%360},90%,60%)`:(i%2?th.snake:th.snake2);
+  drawRounded(x+2,y+2,26,26, i===0?10:9,c,"#ffffff55");ctx.fillStyle="#ffffff55";ctx.beginPath();ctx.arc(x+9,y+8,3,0,Math.PI*2);ctx.fill();
+ }
+ let h=snake[0],x=h[0]*CELL,y=h[1]*CELL,cx=x+15,cy=y+15,dx=dir[0],dy=dir[1],px=-dy,py=dx;
+ ctx.fillStyle=th.head;ctx.beginPath();ctx.roundRect(x+2,y+2,26,26,10);ctx.fill();ctx.strokeStyle="#ffffffaa";ctx.stroke();
+ for(let side of [-1,1]){let ex=cx+dx*4+px*5*side,ey=cy+dy*4+py*5*side;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#18213d";ctx.beginPath();ctx.arc(ex+dx,ey+dy,2,0,Math.PI*2);ctx.fill()}
+ if(Math.floor(t/280)%2===0){ctx.strokeStyle="#ff456d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx+dx*11,cy+dy*11);ctx.lineTo(cx+dx*18,cy+dy*18);ctx.stroke()}
+ ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.shadowColor="#111";ctx.shadowBlur=4;ctx.fillText("HKHẢI",cx,y-2);ctx.shadowBlur=0;
+}
+function drawParticles(){
+ particles=particles.filter(p=>p.life>0);for(let p of particles){p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--;ctx.globalAlpha=Math.min(1,p.life/25);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+}
+function draw(t){
+ drawBackground(t);obstacles.forEach(p=>drawObstacle(p,t));drawFood(t);drawSnake(t);drawParticles();
+ if(levelBanner>0){levelBanner--;ctx.fillStyle="#08102788";ctx.fillRect(0,0,W,H);ctx.textAlign="center";ctx.fillStyle="#ffe078";ctx.font="bold 48px Arial";ctx.fillText("VÒNG "+(level+1),W/2,H/2-8);ctx.fillStyle="#fff";ctx.font="bold 24px Arial";ctx.fillText(themes[level].name,W/2,H/2+30)}
+ if(paused){ctx.fillStyle="#071027aa";ctx.fillRect(0,0,W,H);ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 46px Arial";ctx.fillText("TẠM DỪNG",W/2,H/2)}
+}
+function loop(ts){if(!last)last=ts;let dt=Math.min(50,ts-last);last=ts;if(playing&&!paused&&!gameOver){acc+=dt;let speed=8*.8*Math.pow(1.05,level),interval=1000/speed;if(acc>=interval){acc=0;step()}}draw(ts);requestAnimationFrame(loop)}
+function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG"}
+function toggleAuto(){if(!playing||paused||gameOver)return;auto=!auto;updateHud()}
+$('startBtn').addEventListener('click',()=>{initAudio();reset()});
+$('restartBtn').addEventListener('click',()=>{initAudio();reset()});
+$('pauseBtn').addEventListener('click',pauseToggle);
+$('autoBtn').addEventListener('click',toggleAuto);
+$('soundBtn').addEventListener('click',toggleSound);
+document.querySelectorAll('[data-dir]').forEach(b=>{let action=e=>{e.preventDefault();setDirection(dirs[b.dataset.dir])};b.addEventListener('pointerdown',action)});
+window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d=({arrowup:dirs.up,w:dirs.up,arrowdown:dirs.down,s:dirs.down,arrowleft:dirs.left,a:dirs.left,arrowright:dirs.right,d:dirs.right})[k];if(d){e.preventDefault();setDirection(d)}else if(k==="m")toggleAuto();else if(k==="n")toggleSound();else if(k==="p"||k===" ")pauseToggle();else if(k==="r"&&gameOver)reset()});
+let touchStart=null;canvas.addEventListener('touchstart',e=>{let t=e.changedTouches[0];touchStart=[t.clientX,t.clientY]},{passive:true});canvas.addEventListener('touchend',e=>{if(!touchStart)return;let t=e.changedTouches[0],dx=t.clientX-touchStart[0],dy=t.clientY-touchStart[1];if(Math.max(Math.abs(dx),Math.abs(dy))>20)setDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?dirs.right:dirs.left):(dy>0?dirs.down:dirs.up));touchStart=null},{passive:true});
+// Khoi tao trang thai ban dau truoc khi ve giao dien (tranh level undefined)
+level=0;score=0;eaten=0;
+snake=[[5,8],[4,8],[3,8],[2,8]];
+dir=[1,0];nextDir=[1,0];
+obstacles=makeObstacles(obstacleCount(level),snake);
+food=makeFood();
+updateHud();draw(0);requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
