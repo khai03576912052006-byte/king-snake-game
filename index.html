@@ -188,7 +188,7 @@ function flood(start,blocked){let q=[start],seen=new Set([key(start)]);for(let i
 function setDirection(d){if(!d||!playing||paused||gameOver)return;if(d[0]===-dir[0]&&d[1]===-dir[1])return;auto=false;nextDir=d;updateHud()}
 function finish(win){gameOver=true;playing=false;won=win;endSound(win);overlay(true,win?"🏆 CHIẾN THẮNG!":"💥 GAME OVER",win?"Bạn đã chinh phục cả 10 vòng KING SNAKE!":"Điểm của bạn: "+score+" · Hãy thử lại để lập kỷ lục mới.","↻ CHƠI LẠI")}
 function advanceLevel(){
- if(level<9){level++;eaten=0;obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();levelBanner=110;levelSound();updateHud()}
+ if(level<9){level++;eaten=0;obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();levelBanner=32;levelSound();updateHud()}
  else finish(true);
 }
 function step(){
@@ -256,7 +256,7 @@ function drawParticles(){
 }
 function draw(t){
  drawBackground(t);obstacles.forEach(p=>drawObstacle(p,t));drawFood(t);drawSnake(t);drawParticles();
- if(levelBanner>0){levelBanner--;ctx.fillStyle="#08102788";ctx.fillRect(0,0,W,H);ctx.textAlign="center";ctx.fillStyle="#ffe078";ctx.font="bold 48px Arial";ctx.fillText("VÒNG "+(level+1),W/2,H/2-8);ctx.fillStyle="#fff";ctx.font="bold 24px Arial";ctx.fillText(themes[level].name,W/2,H/2+30)}
+ if(levelBanner>0){levelBanner--;const alpha=Math.min(1,levelBanner/10);ctx.save();ctx.globalAlpha=alpha;ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="bold 17px Arial";const label="✓ VÒNG "+(level+1)+" · "+themes[level].name;const bw=Math.min(W-24,ctx.measureText(label).width+30),bh=34,bx=W/2,by=24;ctx.fillStyle="#071027d9";ctx.strokeStyle="#ffe078";ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(bx-bw/2,by-bh/2,bw,bh,12);ctx.fill();ctx.stroke();ctx.fillStyle="#ffe078";ctx.fillText(label,bx,by);ctx.restore()}
  if(paused){ctx.fillStyle="#071027aa";ctx.fillRect(0,0,W,H);ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 46px Arial";ctx.fillText("TẠM DỪNG",W/2,H/2)}
  drawPlayerName();
 }
