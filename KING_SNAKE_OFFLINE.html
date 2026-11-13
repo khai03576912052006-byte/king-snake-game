@@ -66,14 +66,29 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 <section class="music-panel" aria-label="Chọn nhạc nền">
  <label for="musicSelect">🎵 NHẠC NỀN</label>
  <select id="musicSelect" aria-label="Chọn bài hát">
-  <option value="tim-em">1. Tìm Em (Remix) – Vinz, Exclusive Music, Hồ Quang Hiếu</option>
-  <option value="bac-phan">2. Bạc Phận – Jack x K-ICM</option>
-  <option value="song-gio">3. Sóng Gió – Jack x K-ICM</option>
+  <option value="khong-mon-dang-ho-doi">1. Tại hai ta không môn đăng hộ đối – Nguyễn Vĩ / Nguyễn Thái Học</option>
+  <option value="xin-dung-roi-xa-anh">2. Xin đừng rời xa anh – Lê Gia Bảo</option>
+  <option value="den-khi-nao">3. Đến khi nào – Yanbi, Khắc Việt</option>
+  <option value="tham-thoat">4. Thấm thoát – Khả Hiệp</option>
+  <option value="manh-ba">5. Mạnh Bà – Linh Hương Luz, Finn T</option>
+  <option value="tai-sinh">6. Tái sinh – Tùng Dương</option>
+  <option value="hong-nhan">7. Hồng Nhan – Jack</option>
+  <option value="co-minh-va-ta">8. Có mình và ta – Nguyễn Vĩ</option>
+  <option value="thuong-nhau-den-the">9. Thương nhau đến thế – Gia Huy</option>
+  <option value="om-tron-noi-dau">10. Ôm trọn nỗi đau – Ngân Ngân</option>
+  <option value="minh-la-nguoi-yeu-cu">11. Mình là người yêu cũ – Khả Hiệp</option>
+  <option value="thiep-hong-sai-ten">12. Thiệp hồng sai tên – Đan Trường</option>
+  <option value="mo-long-vi-ai">13. Mở lòng vì ai – Giang Jolee</option>
+  <option value="ben-ay-em-co-ai-roi">14. Bên ấy em có ai rồi – Châu Khải Phong</option>
+  <option value="hat-mua-vuong-van">15. Hạt mưa vương vấn – Thành Đạt</option>
+  <option value="em-thua-co-ta">16. Em thua cô ta – Nguyễn Đình Vũ</option>
+  <option value="bac-phan">17. Bạc phận – Jack x K-ICM</option>
+  <option value="song-gio">18. Sóng gió – Jack x K-ICM</option>
  </select>
  <button id="saveMusicBtn" type="button">💾 LƯU BÀI HÁT</button>
  <button id="musicToggleBtn" type="button">▶ PHÁT NHẠC</button>
  <p class="music-note" id="musicStatus">Chọn bài hát và lưu trước khi bắt đầu. Lựa chọn sẽ được ghi nhớ trên thiết bị này.</p>
- <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="360" height="203" src="https://www.youtube.com/embed/2Nubm_eEVmY?enablejsapi=1&controls=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+ <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="360" height="203" src="https://www.youtube.com/embed/WX7dUj14Z00?enablejsapi=1&controls=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
 </section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
@@ -135,8 +150,8 @@ const themes=[
 let snake,dir,nextDir,level,score,eaten,obstacles,food,auto=false,playing=false,paused=false,gameOver=false,won=false;
 let last=0,acc=0,particles=[],ambient=[],soundOn=true,audio=null,levelBanner=0;
 let playerName="HKHẢI",nameSaved=false,toastTimer=null;
-const musicTracks={"tim-em":"2Nubm_eEVmY","bac-phan":"WX7dUj14Z00","song-gio":"j8U06veqxdU"};
-let selectedMusic="tim-em";
+const musicTracks={"khong-mon-dang-ho-doi":"tgsDsTOh-SY","xin-dung-roi-xa-anh":"hzUG1erf3Yw","den-khi-nao":"QCr4Wf_eJHo","tham-thoat":"nxQTfvj7-qU","manh-ba":"Vlfv9aCW51g","tai-sinh":"Jy6jJGIIUos","hong-nhan":"8x2NjwwHUbQ","co-minh-va-ta":"z1O8YIz5GHI","thuong-nhau-den-the":"ZwkHMfMLmt0","om-tron-noi-dau":"3dNoE-UNFBo","minh-la-nguoi-yeu-cu":"5d0lbdl58ME","thiep-hong-sai-ten":"OTAG-bFuPGY","mo-long-vi-ai":"jUxMoX4HKVQ","ben-ay-em-co-ai-roi":"r0uH9lOqPZI","hat-mua-vuong-van":"S6aDXyOPi8o","em-thua-co-ta":"RPCykOzRl3E","bac-phan":"WX7dUj14Z00","song-gio":"j8U06veqxdU"};
+let selectedMusic="bac-phan";
 try{const savedMusic=localStorage.getItem("kingSnakeMusic");if(savedMusic&&musicTracks[savedMusic])selectedMusic=savedMusic}catch(e){}
 try{const savedName=localStorage.getItem("kingSnakePlayerName");if(savedName){playerName=savedName.trim().slice(0,14)||"HKHẢI";nameSaved=true}}catch(e){}
 const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
@@ -191,7 +206,7 @@ function initYouTubePlayer(){
  window.onYouTubeIframeAPIReady=function(){
   try{
    ytPlayer=new YT.Player('musicPlayer',{height:'203',width:'360',videoId:musicTracks[selectedMusic],playerVars:{autoplay:0,controls:1,playsinline:1,rel:0,enablejsapi:1,origin:window.location.origin},events:{
-    onReady:function(){ytReady=true;ytLoadedTrack=selectedMusic;updateMusicStatus("Trình phát đã sẵn sàng. Nhấn PHÁT NHẠC, sau đó bắt đầu chơi.");},
+    onReady:function(){ytReady=true;ytLoadedTrack=selectedMusic;updateMusicStatus("Đã có 18 bài hát. Chọn bài, lưu rồi nhấn PHÁT NHẠC để nghe.");},
     onStateChange:function(e){if(e.data===YT.PlayerState.PLAYING){$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang phát: "+$('musicSelect').selectedOptions[0].text)}else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){$('musicToggleBtn').textContent="▶ PHÁT NHẠC"}},
     onError:function(e){const msg=({2:"Mã 2: mã video không hợp lệ.",5:"Mã 5: video không phát được trong trình phát HTML5.",100:"Mã 100: video đã bị xóa hoặc đặt riêng tư.",101:"Mã 101: chủ video không cho phép nhúng.",150:"Mã 150: chủ video không cho phép nhúng.",153:"Mã 153: thiếu thông tin nhận diện trang web."})[e.data]||("Mã lỗi "+e.data);updateMusicStatus("YouTube: "+msg+" Hãy chọn bài khác hoặc mở video trên YouTube.")},
     onAutoplayBlocked:function(){updateMusicStatus("Trình duyệt đã chặn tự phát. Hãy nhấn nút PHÁT NHẠC hoặc nút ▶ ngay trên khung video.")}
