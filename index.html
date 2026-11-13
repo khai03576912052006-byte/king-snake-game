@@ -219,6 +219,12 @@ $('soundBtn').addEventListener('click',toggleSound);
 document.querySelectorAll('[data-dir]').forEach(b=>{let action=e=>{e.preventDefault();setDirection(dirs[b.dataset.dir])};b.addEventListener('pointerdown',action)});
 window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d=({arrowup:dirs.up,w:dirs.up,arrowdown:dirs.down,s:dirs.down,arrowleft:dirs.left,a:dirs.left,arrowright:dirs.right,d:dirs.right})[k];if(d){e.preventDefault();setDirection(d)}else if(k==="m")toggleAuto();else if(k==="n")toggleSound();else if(k==="p"||k===" ")pauseToggle();else if(k==="r"&&gameOver)reset()});
 let touchStart=null;canvas.addEventListener('touchstart',e=>{let t=e.changedTouches[0];touchStart=[t.clientX,t.clientY]},{passive:true});canvas.addEventListener('touchend',e=>{if(!touchStart)return;let t=e.changedTouches[0],dx=t.clientX-touchStart[0],dy=t.clientY-touchStart[1];if(Math.max(Math.abs(dx),Math.abs(dy))>20)setDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?dirs.right:dirs.left):(dy>0?dirs.down:dirs.up));touchStart=null},{passive:true});
+// Khoi tao trang thai ban dau truoc khi ve giao dien (tranh level undefined)
+level=0;score=0;eaten=0;
+snake=[[5,8],[4,8],[3,8],[2,8]];
+dir=[1,0];nextDir=[1,0];
+obstacles=makeObstacles(obstacleCount(level),snake);
+food=makeFood();
 updateHud();draw(0);requestAnimationFrame(loop);
 })();
 </script>
