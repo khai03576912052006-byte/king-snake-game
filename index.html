@@ -44,6 +44,11 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:900/540;touch-action:no
 .help{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin:10px 0}
 footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 @media(max-width:560px){body{padding:9px}.hud{grid-template-columns:repeat(2,1fr)}.controls{gap:12px}.dpad{grid-template-columns:repeat(3,82px);grid-template-rows:repeat(2,60px);gap:8px}.dpad button{font-size:28px;min-width:82px;min-height:60px}.controls>.actions button{min-height:44px}.actions button{padding:9px 10px;font-size:12px}}
+
+/* MUSIC PICKER */
+.music-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:13px 15px;border:1px solid #34436d;border-radius:15px;background:linear-gradient(135deg,#121d3c,#20264b)}
+.music-panel label{font-weight:800;color:#ffe078;font-size:13px}.music-panel select{flex:1;min-width:180px;background:#0b1430;color:#fff;border:1px solid #596b9b;border-radius:9px;padding:10px;font:inherit}.music-panel button{padding:10px 13px}.music-note{width:100%;font-size:11px;color:#aeb9da;margin:0}
+@media(max-width:560px){.music-panel{gap:8px}.music-panel select{flex-basis:100%}.music-panel button{flex:1}}
 </style>
 </head>
 <body>
@@ -58,6 +63,18 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
  <label for="snakeNameInput">🐍 TÊN NGƯỜI CHƠI</label>
  <input id="snakeNameInput" type="text" maxlength="14" placeholder="Nhập tên của bạn" autocomplete="off">
  <button id="saveNameBtn" type="button">💾 LƯU TÊN</button>
+</section>
+<section class="music-panel" aria-label="Chọn nhạc nền">
+ <label for="musicSelect">🎵 NHẠC NỀN</label>
+ <select id="musicSelect" aria-label="Chọn bài hát">
+  <option value="tim-em">1. Tìm Em</option>
+  <option value="bac-phan">2. Bạc Phận</option>
+  <option value="song-gio">3. Sóng Gió</option>
+ </select>
+ <button id="saveMusicBtn" type="button">💾 LƯU BÀI HÁT</button>
+ <button id="musicToggleBtn" type="button">▶ PHÁT NHẠC</button>
+ <p class="music-note" id="musicStatus">Chọn bài hát và lưu trước khi bắt đầu. Lựa chọn sẽ được ghi nhớ trên thiết bị này.</p>
+ <audio id="bgMusic" loop preload="none"></audio>
 </section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
@@ -119,6 +136,9 @@ const themes=[
 let snake,dir,nextDir,level,score,eaten,obstacles,food,auto=false,playing=false,paused=false,gameOver=false,won=false;
 let last=0,acc=0,particles=[],ambient=[],soundOn=true,audio=null,levelBanner=0;
 let playerName="HKHẢI",nameSaved=false,toastTimer=null;
+const musicTracks={"tim-em":"./music/tim-em.mp3","bac-phan":"./music/bac-phan.mp3","song-gio":"./music/song-gio.mp3"};
+let selectedMusic="tim-em";
+try{const savedMusic=localStorage.getItem("kingSnakeMusic");if(savedMusic&&musicTracks[savedMusic])selectedMusic=savedMusic}catch(e){}
 try{const savedName=localStorage.getItem("kingSnakePlayerName");if(savedName){playerName=savedName.trim().slice(0,14)||"HKHẢI";nameSaved=true}}catch(e){}
 const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 const eq=(a,b)=>a&&b&&a[0]===b[0]&&a[1]===b[1];
@@ -146,7 +166,7 @@ function makeObstacles(n,s){
 function makeFood(){let blocked=new Set([...snake,...obstacles].map(key));return freeCell(blocked)}
 function reset(){
  overlay(false);
- level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;nameVisibleUntil=performance.now()+2200;notify("BẮT ĐẦU · "+playerName);updateHud();draw(0);playMusicStart();
+ level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;nameVisibleUntil=performance.now()+2200;notify("BẮT ĐẦU · "+playerName);updateHud();draw(0);playMusicStart();startBackgroundMusic();
 }
 function notify(message,duration=650){
  const el=$('toast');if(!el)return;
@@ -166,6 +186,11 @@ function overlay(show,title,text,button){const panel=$('overlay');panel.classLis
 function initAudio(){if(!audio){try{audio=new(window.AudioContext||window.webkitAudioContext)()}catch(e){soundOn=false}}if(audio&&audio.state==="suspended")audio.resume()}
 function tone(freq,dur=.12,type="sine",vol=.045){if(!soundOn)return;initAudio();if(!audio)return;let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(vol,audio.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur+.02)}
 function playMusicStart(){if(soundOn){tone(440,.10);setTimeout(()=>tone(554,.12),100);setTimeout(()=>tone(659,.18),220)}}
+function musicElement(){return $('bgMusic')}
+function updateMusicStatus(message){const el=$('musicStatus');if(el)el.textContent=message||("Đã lưu: "+$('musicSelect').selectedOptions[0].text+" · Nhạc sẽ phát khi bắt đầu game.")}
+function saveMusicSelection(){selectedMusic=$('musicSelect').value;try{localStorage.setItem("kingSnakeMusic",selectedMusic)}catch(e){};const a=musicElement();if(a){a.pause();a.src=musicTracks[selectedMusic];a.load()}updateMusicStatus("Đã lưu bài hát: "+$('musicSelect').selectedOptions[0].text+". Nhạc sẽ phát khi bắt đầu game.");notify("Đã lưu lựa chọn nhạc nền")}
+function startBackgroundMusic(){if(!soundOn)return;const a=musicElement();if(!a)return;if(a.dataset.track!==selectedMusic){a.src=musicTracks[selectedMusic];a.dataset.track=selectedMusic;a.load()}a.volume=.38;const p=a.play();if(p&&p.catch)p.catch(()=>updateMusicStatus("Chưa phát được nhạc. Hãy thêm 3 tệp MP3 vào thư mục music của game."));const b=$('musicToggleBtn');if(b)b.textContent="Ⅱ TẠM DỪNG NHẠC"}
+function toggleBackgroundMusic(){const a=musicElement();if(!a)return;if(!a.paused){a.pause();$('musicToggleBtn').textContent="▶ PHÁT NHẠC";updateMusicStatus("Nhạc nền đang tạm dừng.")}else{if(!a.src||a.dataset.track!==selectedMusic){a.src=musicTracks[selectedMusic];a.dataset.track=selectedMusic}const p=a.play();if(p&&p.catch)p.catch(()=>updateMusicStatus("Chưa phát được nhạc. Hãy thêm tệp MP3 vào thư mục music."));$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC"}}
 function eatSound(){tone(720,.08,"triangle");setTimeout(()=>tone(980,.10,"sine"),55)}
 function levelSound(){[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle"),i*100))}
 function endSound(win){if(win){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.22),i*140))}else{[330,260,190].forEach((f,i)=>setTimeout(()=>tone(f,.28,"sawtooth"),i*180))}}
@@ -261,9 +286,14 @@ function draw(t){
  drawPlayerName();
 }
 function loop(ts){if(!last)last=ts;let dt=Math.min(50,ts-last);last=ts;if(playing&&!paused&&!gameOver){acc+=dt;let speed=8*.8*Math.pow(1.05,level),interval=1000/speed;if(acc>=interval){acc=0;step()}}draw(ts);requestAnimationFrame(loop)}
-function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG"}
+function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG";const music=musicElement();if(music){if(paused)music.pause();else if(soundOn)music.play().catch(()=>{})}}
 function toggleAuto(){if(!playing||paused||gameOver)return;auto=!auto;updateHud()}
 $('saveNameBtn').addEventListener('click',saveSnakeName);
+$('musicSelect').value=selectedMusic;
+$('musicSelect').addEventListener('change',()=>{selectedMusic=$('musicSelect').value;updateMusicStatus("Bạn đã chọn "+$('musicSelect').selectedOptions[0].text+". Nhấn LƯU BÀI HÁT để ghi nhớ.")});
+$('saveMusicBtn').addEventListener('click',saveMusicSelection);
+$('musicToggleBtn').addEventListener('click',toggleBackgroundMusic);
+updateMusicStatus("Đã lưu: "+$('musicSelect').selectedOptions[0].text+" · Nhạc sẽ phát khi bắt đầu game.");
 $('snakeNameInput').value=playerName;
 $('snakeNameInput').addEventListener('keydown',e=>{if(e.key==="Enter"){e.preventDefault();saveSnakeName()}});
 $('startBtn').addEventListener('click',()=>{overlay(false);$('overlay').setAttribute('aria-hidden','true');initAudio();reset()});
