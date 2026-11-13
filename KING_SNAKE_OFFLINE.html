@@ -46,8 +46,8 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 
 /* MUSIC PICKER */
 .music-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:13px 15px;border:1px solid #34436d;border-radius:15px;background:linear-gradient(135deg,#121d3c,#20264b)}
-.music-panel label{font-weight:800;color:#ffe078;font-size:13px}.music-panel select{flex:1;min-width:180px;background:#0b1430;color:#fff;border:1px solid #596b9b;border-radius:9px;padding:10px;font:inherit}.music-panel button{padding:10px 13px}.music-note{width:100%;font-size:11px;color:#aeb9da;margin:0}.music-player-wrap{width:240px;max-width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#050914}.music-player-wrap iframe{display:block;width:100%;height:100%;border:0}
-@media(max-width:560px){.music-panel{gap:8px}.music-panel select{flex-basis:100%}.music-panel button{flex:1}.music-player-wrap{width:100%;max-width:320px}}
+.music-panel label{font-weight:800;color:#ffe078;font-size:13px}.music-panel select{flex:1;min-width:180px;background:#0b1430;color:#fff;border:1px solid #596b9b;border-radius:9px;padding:10px;font:inherit}.music-panel button{padding:10px 13px}.music-note{width:100%;font-size:11px;color:#aeb9da;margin:0}.music-player-wrap{width:360px;max-width:100%;height:203px;min-height:200px;border-radius:10px;overflow:hidden;background:#050914;flex:0 0 auto}.music-player-wrap iframe{display:block;width:100%;height:100%;min-height:200px;border:0}
+@media(max-width:560px){.music-panel{gap:8px}.music-panel select{flex-basis:100%}.music-panel button{flex:1}.music-player-wrap{width:100%;max-width:360px;height:203px;min-height:200px}}
 </style>
 </head>
 <body>
@@ -73,7 +73,7 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
  <button id="saveMusicBtn" type="button">💾 LƯU BÀI HÁT</button>
  <button id="musicToggleBtn" type="button">▶ PHÁT NHẠC</button>
  <p class="music-note" id="musicStatus">Chọn bài hát và lưu trước khi bắt đầu. Lựa chọn sẽ được ghi nhớ trên thiết bị này.</p>
- <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="240" height="135" src="https://www.youtube.com/embed/2Nubm_eEVmY?enablejsapi=1&controls=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+ <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="360" height="203" src="https://www.youtube.com/embed/2Nubm_eEVmY?enablejsapi=1&controls=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
 </section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
@@ -185,32 +185,50 @@ function overlay(show,title,text,button){const panel=$('overlay');panel.classLis
 function initAudio(){if(!audio){try{audio=new(window.AudioContext||window.webkitAudioContext)()}catch(e){soundOn=false}}if(audio&&audio.state==="suspended")audio.resume()}
 function tone(freq,dur=.12,type="sine",vol=.045){if(!soundOn)return;initAudio();if(!audio)return;let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(vol,audio.currentTime+.01);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur+.02)}
 function playMusicStart(){if(soundOn){tone(440,.10);setTimeout(()=>tone(554,.12),100);setTimeout(()=>tone(659,.18),220)}}
-let ytPlayer=null,ytReady=false,ytPendingPlay=false,ytLoadedTrack=null;
-function updateMusicStatus(message){const el=$('musicStatus');if(el)el.textContent=message||("Đã lưu: "+$('musicSelect').selectedOptions[0].text+" · Nhấn phát hoặc bắt đầu game để nghe nhạc.")}
+let ytPlayer=null,ytReady=false,ytLoadedTrack=null;
+function updateMusicStatus(message){const el=$('musicStatus');if(el)el.textContent=message||("Đã lưu: "+$('musicSelect').selectedOptions[0].text+" · Nhấn PHÁT NHẠC để nghe trong lúc chơi.")}
 function initYouTubePlayer(){
  window.onYouTubeIframeAPIReady=function(){
-  try{ytPlayer=new YT.Player('musicPlayer',{events:{
-   onReady:function(){ytReady=true;updateMusicStatus("Trình phát nhạc đã sẵn sàng. Chọn bài, lưu rồi nhấn PHÁT NHẠC hoặc BẮT ĐẦU CHƠI.");if(ytPendingPlay){ytPendingPlay=false;playSelectedTrack()}},
-   onStateChange:function(e){if(e.data===YT.PlayerState.PLAYING){$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang phát: "+$('musicSelect').selectedOptions[0].text)}else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){$('musicToggleBtn').textContent="▶ PHÁT NHẠC"}},
-   onError:function(e){updateMusicStatus("YouTube không phát được bài này (mã lỗi "+e.data+"). Hãy thử chọn bài khác hoặc mở video trên YouTube.")}
-  }})}catch(err){updateMusicStatus("Không tải được trình phát YouTube. Kiểm tra kết nối mạng hoặc tiện ích chặn quảng cáo.")}
+  try{
+   ytPlayer=new YT.Player('musicPlayer',{height:'203',width:'360',videoId:musicTracks[selectedMusic],playerVars:{autoplay:0,controls:1,playsinline:1,rel:0,enablejsapi:1,origin:window.location.origin},events:{
+    onReady:function(){ytReady=true;ytLoadedTrack=selectedMusic;updateMusicStatus("Trình phát đã sẵn sàng. Nhấn PHÁT NHẠC, sau đó bắt đầu chơi.");},
+    onStateChange:function(e){if(e.data===YT.PlayerState.PLAYING){$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang phát: "+$('musicSelect').selectedOptions[0].text)}else if(e.data===YT.PlayerState.PAUSED||e.data===YT.PlayerState.ENDED){$('musicToggleBtn').textContent="▶ PHÁT NHẠC"}},
+    onError:function(e){const msg=({2:"Mã 2: mã video không hợp lệ.",5:"Mã 5: video không phát được trong trình phát HTML5.",100:"Mã 100: video đã bị xóa hoặc đặt riêng tư.",101:"Mã 101: chủ video không cho phép nhúng.",150:"Mã 150: chủ video không cho phép nhúng.",153:"Mã 153: thiếu thông tin nhận diện trang web."})[e.data]||("Mã lỗi "+e.data);updateMusicStatus("YouTube: "+msg+" Hãy chọn bài khác hoặc mở video trên YouTube.")},
+    onAutoplayBlocked:function(){updateMusicStatus("Trình duyệt đã chặn tự phát. Hãy nhấn nút PHÁT NHẠC hoặc nút ▶ ngay trên khung video.")}
+   }});
+  }catch(err){updateMusicStatus("Không khởi tạo được YouTube. Hãy tải lại trang và kiểm tra kết nối mạng.")}
  };
- const tag=document.createElement('script');tag.src="https://www.youtube.com/iframe_api";tag.async=true;tag.onerror=function(){updateMusicStatus("Không tải được YouTube Player API. Kiểm tra mạng hoặc trình chặn quảng cáo.")};document.head.appendChild(tag);
+ if(window.YT&&window.YT.Player){window.onYouTubeIframeAPIReady();return}
+ if(!document.querySelector('script[data-youtube-iframe-api]')){
+  const tag=document.createElement('script');tag.src="https://www.youtube.com/iframe_api";tag.async=true;tag.dataset.youtubeIframeApi="1";tag.onerror=function(){updateMusicStatus("Không tải được YouTube Player API. Kiểm tra mạng hoặc tiện ích chặn quảng cáo.")};document.head.appendChild(tag);
+ }
 }
 function playSelectedTrack(){
- if(!ytReady||!ytPlayer){ytPendingPlay=true;updateMusicStatus("Đang tải trình phát. Nếu nhạc chưa chạy, nhấn PHÁT NHẠC thêm một lần.");return}
+ if(!ytReady||!ytPlayer){updateMusicStatus("Trình phát đang tải. Chờ thông báo sẵn sàng rồi nhấn PHÁT NHẠC.");return}
  const id=musicTracks[selectedMusic];
  if(ytLoadedTrack!==selectedMusic){ytPlayer.loadVideoById({videoId:id});ytLoadedTrack=selectedMusic}
- ytPlayer.playVideo();$('musicToggleBtn').textContent="Ⅱ TẠM DỪNG NHẠC";updateMusicStatus("Đang yêu cầu phát: "+$('musicSelect').selectedOptions[0].text);
+ ytPlayer.playVideo();
 }
-function saveMusicSelection(){selectedMusic=$('musicSelect').value;try{localStorage.setItem("kingSnakeMusic",selectedMusic)}catch(e){};if(ytReady&&ytPlayer){ytPlayer.cueVideoById(musicTracks[selectedMusic]);ytLoadedTrack=selectedMusic}else{const frame=$('musicPlayer');if(frame)frame.src="https://www.youtube.com/embed/"+musicTracks[selectedMusic]+"?enablejsapi=1&controls=1&rel=0&playsinline=1"}$('musicToggleBtn').textContent="▶ PHÁT NHẠC";updateMusicStatus("Đã lưu: "+$('musicSelect').selectedOptions[0].text+". Nhấn PHÁT NHẠC hoặc BẮT ĐẦU CHƠI.");notify("Đã lưu lựa chọn nhạc nền")}
-function startBackgroundMusic(){if(!soundOn)return;if(!ytReady||!ytPlayer){ytPendingPlay=true;updateMusicStatus("Trình phát đang tải. Hãy nhấn PHÁT NHẠC nếu chưa tự phát.");return}playSelectedTrack()}
-function toggleBackgroundMusic(){if(!ytReady||!ytPlayer){ytPendingPlay=true;updateMusicStatus("YouTube đang tải. Vui lòng nhấn PHÁT NHẠC lại sau giây lát.");return}if(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();$('musicToggleBtn').textContent="▶ PHÁT NHẠC";updateMusicStatus("Nhạc nền đang tạm dừng.")}else{playSelectedTrack()}}
+function saveMusicSelection(){
+ selectedMusic=$('musicSelect').value;
+ try{localStorage.setItem("kingSnakeMusic",selectedMusic)}catch(e){}
+ if(ytReady&&ytPlayer){ytPlayer.cueVideoById(musicTracks[selectedMusic]);ytLoadedTrack=selectedMusic}
+ else updateMusicStatus("Đã lưu bài hát. Trình phát đang tải; chờ sẵn sàng rồi nhấn PHÁT NHẠC.");
+ $('musicToggleBtn').textContent="▶ PHÁT NHẠC";
+ if(ytReady)updateMusicStatus("Đã lưu: "+$('musicSelect').selectedOptions[0].text+". Nhấn PHÁT NHẠC để nghe.");
+ notify("Đã lưu lựa chọn nhạc nền");
+}
+function startBackgroundMusic(){if(!soundOn)return;if(ytReady&&ytPlayer)playSelectedTrack();else updateMusicStatus("Game đã bắt đầu. Chờ trình phát sẵn sàng rồi nhấn PHÁT NHẠC.")}
+function toggleBackgroundMusic(){
+ if(!ytReady||!ytPlayer){updateMusicStatus("Trình phát chưa sẵn sàng. Chờ vài giây rồi nhấn lại.");return}
+ if(ytPlayer.getPlayerState()===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();$('musicToggleBtn').textContent="▶ PHÁT NHẠC";updateMusicStatus("Nhạc nền đang tạm dừng.")}
+ else playSelectedTrack();
+}
 initYouTubePlayer();
 function eatSound(){tone(720,.08,"triangle");setTimeout(()=>tone(980,.10,"sine"),55)}
 function levelSound(){[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle"),i*100))}
 function endSound(win){if(win){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.22),i*140))}else{[330,260,190].forEach((f,i)=>setTimeout(()=>tone(f,.28,"sawtooth"),i*180))}}
-function toggleSound(){soundOn=!soundOn;if(soundOn){playMusicStart();if(playing&&!paused&&ytReady&&ytPlayer)ytPlayer.playVideo()}else if(ytReady&&ytPlayer){ytPlayer.pauseVideo()}updateHud()}
+function toggleSound(){soundOn=!soundOn;if(soundOn){playMusicStart();if(playing&&!paused&&ytReady&&ytPlayer&&ytPlayer.getPlayerState()!==YT.PlayerState.PLAYING)playSelectedTrack()}else if(ytReady&&ytPlayer){ytPlayer.pauseVideo()}updateHud()}
 function spawn(p,colors){for(let i=0;i<22;i++){let a=Math.random()*Math.PI*2,v=1+Math.random()*4;particles.push({x:p[0]*CELL+15,y:p[1]*CELL+15,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:35+randInt(20),c:colors[randInt(colors.length)],r:2+Math.random()*3})}}
 function bfs(start,goal,blocked){
  let q=[start],prev=new Map([[key(start),null]]);
