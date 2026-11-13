@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#10152d">
 <title>KING SNAKE – Bản chơi ngoại tuyến</title>
 <style>
+.name-panel{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:#151d3be8;border:1px solid #ffffff22;border-radius:13px;padding:10px 12px;margin:0 0 10px}
+.name-panel label{font-size:12px;font-weight:800;color:#ffd45c;white-space:nowrap}
+.name-panel input{flex:1;min-width:120px;background:#0b1023;color:#fff;border:1px solid #7184bd;border-radius:9px;padding:10px 12px;font:inherit;outline:none}
+.name-panel input:focus{border-color:#ffd45c;box-shadow:0 0 0 2px #ffd45c33}
+.name-panel button{white-space:nowrap}
+.toast{position:absolute;z-index:3;top:14px;left:50%;transform:translate(-50%,-8px);opacity:0;pointer-events:none;background:#101a35ed;border:1px solid #ffd45c;border-radius:999px;padding:10px 18px;color:#fff;font-weight:800;font-size:14px;text-align:center;max-width:calc(100% - 24px);box-shadow:0 6px 22px #0008;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:560px){.name-panel{gap:7px}.name-panel label{width:100%}.name-panel input{min-width:0}.name-panel button{padding:10px 12px}}
 :root{--bg:#0b1023;--panel:#151d3b;--gold:#ffd45c;--muted:#aeb9dc}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#263568,#0b1023 65%);color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif;display:flex;justify-content:center;padding:16px}
@@ -45,6 +53,11 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
   <button id="autoBtn">🤖 AUTO: TẮT</button><button id="soundBtn">🔊 ÂM THANH</button>
  </div>
 </header>
+<section class="name-panel" aria-label="Đổi tên con rắn">
+ <label for="snakeNameInput">🐍 TÊN NGƯỜI CHƠI</label>
+ <input id="snakeNameInput" type="text" maxlength="14" placeholder="Nhập tên của bạn" autocomplete="off">
+ <button id="saveNameBtn" type="button">💾 LƯU TÊN</button>
+</section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
  <div class="stat"><small>Vòng</small><b id="level">1/10</b></div>
@@ -53,6 +66,7 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 </section>
 <div class="stage">
  <canvas id="game" width="900" height="540" aria-label="Màn hình trò chơi KING SNAKE"></canvas>
+ <div class="toast" id="toast" role="status" aria-live="polite"></div>
  <div class="overlay" id="overlay"><div class="dialog">
   <h2 id="dialogTitle">KING SNAKE</h2><p id="dialogText">Ăn đủ mồi để vượt qua 10 vòng. Tránh tường, thân rắn và chướng ngại vật!</p>
   <button class="primary" id="startBtn">▶ BẮT ĐẦU CHƠI</button>
@@ -103,6 +117,8 @@ const themes=[
 ];
 let snake,dir,nextDir,level,score,eaten,obstacles,food,auto=false,playing=false,paused=false,gameOver=false,won=false;
 let last=0,acc=0,particles=[],ambient=[],soundOn=true,audio=null,levelBanner=0;
+let playerName="HKHẢI",nameVisibleUntil=0,toastTimer=null;
+try{const savedName=localStorage.getItem("kingSnakePlayerName");if(savedName)playerName=savedName.trim().slice(0,14)||"HKHẢI"}catch(e){}
 const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 const eq=(a,b)=>a&&b&&a[0]===b[0]&&a[1]===b[1];
 const key=p=>p[0]+","+p[1];
@@ -128,7 +144,21 @@ function makeObstacles(n,s){
 }
 function makeFood(){let blocked=new Set([...snake,...obstacles].map(key));return freeCell(blocked)}
 function reset(){
- level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;overlay(false);updateHud();draw(0);playMusicStart();
+ level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;nameVisibleUntil=performance.now()+2200;overlay(false);notify("BẮT ĐẦU · "+playerName);updateHud();draw(0);playMusicStart();
+}
+function notify(message,duration=2200){
+ const el=$('toast');if(!el)return;
+ el.textContent=message;el.classList.add('show');
+ if(toastTimer)clearTimeout(toastTimer);
+ toastTimer=setTimeout(()=>el.classList.remove('show'),duration);
+}
+function saveSnakeName(){
+ const value=$('snakeNameInput').value.trim().replace(/\s+/g,' ').slice(0,14);
+ if(!value){notify("Vui lòng nhập tên trước khi lưu");return}
+ playerName=value;$('snakeNameInput').value=value;
+ try{localStorage.setItem("kingSnakePlayerName",playerName)}catch(e){}
+ nameVisibleUntil=performance.now()+2200;
+ notify("Đã lưu tên: "+playerName);
 }
 function updateHud(){$('score').textContent=score;$('level').textContent=(level+1)+"/10";$('eaten').textContent=eaten+"/"+foodTarget(level);$('theme').textContent=themes[level].name;$('autoBtn').textContent=auto?"🤖 AUTO: BẬT":"🤖 AUTO: TẮT";$('soundBtn').textContent=soundOn?"🔊 ÂM THANH":"🔇 TẮT TIẾNG"}
 function overlay(show,title,text,button){$('overlay').classList.toggle('hidden',!show);if(title)$('dialogTitle').textContent=title;if(text)$('dialogText').textContent=text;if(button)$('startBtn').textContent=button}
@@ -208,7 +238,7 @@ function drawSnake(t){
  ctx.fillStyle=th.head;ctx.beginPath();ctx.roundRect(x+2,y+2,26,26,10);ctx.fill();ctx.strokeStyle="#ffffffaa";ctx.stroke();
  for(let side of [-1,1]){let ex=cx+dx*4+px*5*side,ey=cy+dy*4+py*5*side;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#18213d";ctx.beginPath();ctx.arc(ex+dx,ey+dy,2,0,Math.PI*2);ctx.fill()}
  if(Math.floor(t/280)%2===0){ctx.strokeStyle="#ff456d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx+dx*11,cy+dy*11);ctx.lineTo(cx+dx*18,cy+dy*18);ctx.stroke()}
- ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.shadowColor="#111";ctx.shadowBlur=4;ctx.fillText("HKHẢI",cx,y-2);ctx.shadowBlur=0;
+ if(t<nameVisibleUntil){ctx.font="bold 14px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.shadowColor="#111";ctx.shadowBlur=5;ctx.fillText(playerName,cx,y-5);ctx.shadowBlur=0;}
 }
 function drawParticles(){
  particles=particles.filter(p=>p.life>0);for(let p of particles){p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--;ctx.globalAlpha=Math.min(1,p.life/25);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
@@ -221,13 +251,16 @@ function draw(t){
 function loop(ts){if(!last)last=ts;let dt=Math.min(50,ts-last);last=ts;if(playing&&!paused&&!gameOver){acc+=dt;let speed=8*.8*Math.pow(1.05,level),interval=1000/speed;if(acc>=interval){acc=0;step()}}draw(ts);requestAnimationFrame(loop)}
 function pauseToggle(){if(!playing||gameOver)return;paused=!paused;$('pauseBtn').textContent=paused?"▶ TIẾP TỤC":"Ⅱ TẠM DỪNG"}
 function toggleAuto(){if(!playing||paused||gameOver)return;auto=!auto;updateHud()}
+$('saveNameBtn').addEventListener('click',saveSnakeName);
+$('snakeNameInput').value=playerName;
+$('snakeNameInput').addEventListener('keydown',e=>{if(e.key==="Enter"){e.preventDefault();saveSnakeName()}});
 $('startBtn').addEventListener('click',()=>{initAudio();reset()});
 $('restartBtn').addEventListener('click',()=>{initAudio();reset()});
 $('pauseBtn').addEventListener('click',pauseToggle);
 $('autoBtn').addEventListener('click',toggleAuto);
 $('soundBtn').addEventListener('click',toggleSound);
 document.querySelectorAll('[data-dir]').forEach(b=>{let action=e=>{e.preventDefault();setDirection(dirs[b.dataset.dir])};b.addEventListener('pointerdown',action)});
-window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(),d=({arrowup:dirs.up,w:dirs.up,arrowdown:dirs.down,s:dirs.down,arrowleft:dirs.left,a:dirs.left,arrowright:dirs.right,d:dirs.right})[k];if(d){e.preventDefault();setDirection(d)}else if(k==="m")toggleAuto();else if(k==="n")toggleSound();else if(k==="p"||k===" ")pauseToggle();else if(k==="r"&&gameOver)reset()});
+window.addEventListener('keydown',e=>{if(e.target&&(/INPUT|TEXTAREA/.test(e.target.tagName)))return;let k=e.key.toLowerCase(),d=({arrowup:dirs.up,w:dirs.up,arrowdown:dirs.down,s:dirs.down,arrowleft:dirs.left,a:dirs.left,arrowright:dirs.right,d:dirs.right})[k];if(d){e.preventDefault();setDirection(d)}else if(k==="m")toggleAuto();else if(k==="n")toggleSound();else if(k==="p"||k===" ")pauseToggle();else if(k==="r"&&gameOver)reset()});
 let touchStart=null;canvas.addEventListener('touchstart',e=>{let t=e.changedTouches[0];touchStart=[t.clientX,t.clientY]},{passive:true});canvas.addEventListener('touchend',e=>{if(!touchStart)return;let t=e.changedTouches[0],dx=t.clientX-touchStart[0],dy=t.clientY-touchStart[1];if(Math.max(Math.abs(dx),Math.abs(dy))>20)setDirection(Math.abs(dx)>Math.abs(dy)?(dx>0?dirs.right:dirs.left):(dy>0?dirs.down:dirs.up));touchStart=null},{passive:true});
 // Khoi tao trang thai ban dau truoc khi ve giao dien (tranh level undefined)
 level=0;score=0;eaten=0;
