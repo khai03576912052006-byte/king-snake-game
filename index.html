@@ -23,7 +23,7 @@ button.primary{background:linear-gradient(180deg,#ffd966,#f29a2e);color:#29203b;
 .stat b{font-size:clamp(15px,2.8vw,22px)}
 .stage{position:relative;background:#0c1429;border:3px solid #7184bd;border-radius:16px;overflow:hidden;box-shadow:0 18px 45px #0008}
 canvas{display:block;width:100%;height:auto;aspect-ratio:900/540;touch-action:none}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#081027b8;padding:18px}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#08102778;padding:18px}
 .overlay.hidden{display:none}
 .dialog{max-width:430px;width:100%;text-align:center;background:linear-gradient(145deg,#273765,#141d3d);border:1px solid #ffffff35;border-radius:20px;padding:24px;box-shadow:0 20px 60px #0009}
 .dialog h2{margin:0 0 8px;color:var(--gold);font-size:clamp(25px,5vw,38px)}
@@ -76,6 +76,16 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 (()=>{
 "use strict";
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+// Tuong thich trinh duyet cu: bo sung roundRect neu canvas chua ho tro
+if(!CanvasRenderingContext2D.prototype.roundRect){
+ CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+  r=Math.min(Number(r)||0,w/2,h/2);this.beginPath();this.moveTo(x+r,y);
+  this.lineTo(x+w-r,y);this.quadraticCurveTo(x+w,y,x+w,y+r);
+  this.lineTo(x+w,y+h-r);this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  this.lineTo(x+r,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r);
+  this.lineTo(x,y+r);this.quadraticCurveTo(x,y,x+r,y);this.closePath();return this;
+ };
+}
 const W=900,H=540,CELL=30,COLS=30,ROWS=18;
 const MIN_X=1,MAX_X=COLS-2,MIN_Y=1,MAX_Y=ROWS-2;
 const $=id=>document.getElementById(id);
@@ -118,7 +128,7 @@ function makeObstacles(n,s){
 }
 function makeFood(){let blocked=new Set([...snake,...obstacles].map(key));return freeCell(blocked)}
 function reset(){
- level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=100;overlay(false);updateHud();playMusicStart();
+ level=0;score=0;eaten=0;snake=[[5,8],[4,8],[3,8],[2,8]];dir=[1,0];nextDir=[1,0];obstacles=makeObstacles(obstacleCount(level),snake);food=makeFood();particles=[];ambient=[];auto=false;playing=true;paused=false;gameOver=false;won=false;acc=0;levelBanner=0;overlay(false);updateHud();draw(0);playMusicStart();
 }
 function updateHud(){$('score').textContent=score;$('level').textContent=(level+1)+"/10";$('eaten').textContent=eaten+"/"+foodTarget(level);$('theme').textContent=themes[level].name;$('autoBtn').textContent=auto?"🤖 AUTO: BẬT":"🤖 AUTO: TẮT";$('soundBtn').textContent=soundOn?"🔊 ÂM THANH":"🔇 TẮT TIẾNG"}
 function overlay(show,title,text,button){$('overlay').classList.toggle('hidden',!show);if(title)$('dialogTitle').textContent=title;if(text)$('dialogText').textContent=text;if(button)$('startBtn').textContent=button}
