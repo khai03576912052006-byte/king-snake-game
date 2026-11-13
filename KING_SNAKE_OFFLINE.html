@@ -66,14 +66,14 @@ footer{text-align:center;color:#8492bd;font-size:11px;margin-top:10px}
 <section class="music-panel" aria-label="Chọn nhạc nền">
  <label for="musicSelect">🎵 NHẠC NỀN</label>
  <select id="musicSelect" aria-label="Chọn bài hát">
-  <option value="tim-em">1. Tìm Em</option>
-  <option value="bac-phan">2. Bạc Phận</option>
-  <option value="song-gio">3. Sóng Gió</option>
+  <option value="tim-em">1. Tìm Em (Remix) – Vinz, Exclusive Music, Hồ Quang Hiếu</option>
+  <option value="bac-phan">2. Bạc Phận – Jack x K-ICM</option>
+  <option value="song-gio">3. Sóng Gió – Jack x K-ICM</option>
  </select>
  <button id="saveMusicBtn" type="button">💾 LƯU BÀI HÁT</button>
  <button id="musicToggleBtn" type="button">▶ PHÁT NHẠC</button>
  <p class="music-note" id="musicStatus">Chọn bài hát và lưu trước khi bắt đầu. Lựa chọn sẽ được ghi nhớ trên thiết bị này.</p>
- <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="240" height="135" src="https://www.youtube-nocookie.com/embed/iVRR6GMs9QA?enablejsapi=1&controls=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+ <div class="music-player-wrap"><iframe id="musicPlayer" title="Trình phát nhạc nền KING SNAKE" width="240" height="135" src="https://www.youtube-nocookie.com/embed/2Nubm_eEVmY?enablejsapi=1&controls=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
 </section>
 <section class="hud">
  <div class="stat"><small>Điểm</small><b id="score">0</b></div>
@@ -135,7 +135,7 @@ const themes=[
 let snake,dir,nextDir,level,score,eaten,obstacles,food,auto=false,playing=false,paused=false,gameOver=false,won=false;
 let last=0,acc=0,particles=[],ambient=[],soundOn=true,audio=null,levelBanner=0;
 let playerName="HKHẢI",nameSaved=false,toastTimer=null;
-const musicTracks={"tim-em":"iVRR6GMs9QA","bac-phan":"WX7dUj14Z00","song-gio":"j8U06veqxdU"};
+const musicTracks={"tim-em":"2Nubm_eEVmY","bac-phan":"WX7dUj14Z00","song-gio":"j8U06veqxdU"};
 let selectedMusic="tim-em";
 try{const savedMusic=localStorage.getItem("kingSnakeMusic");if(savedMusic&&musicTracks[savedMusic])selectedMusic=savedMusic}catch(e){}
 try{const savedName=localStorage.getItem("kingSnakePlayerName");if(savedName){playerName=savedName.trim().slice(0,14)||"HKHẢI";nameSaved=true}}catch(e){}
