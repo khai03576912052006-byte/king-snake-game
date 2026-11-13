@@ -238,7 +238,7 @@ function drawSnake(t){
  ctx.fillStyle=th.head;ctx.beginPath();ctx.roundRect(x+2,y+2,26,26,10);ctx.fill();ctx.strokeStyle="#ffffffaa";ctx.stroke();
  for(let side of [-1,1]){let ex=cx+dx*4+px*5*side,ey=cy+dy*4+py*5*side;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#18213d";ctx.beginPath();ctx.arc(ex+dx,ey+dy,2,0,Math.PI*2);ctx.fill()}
  if(Math.floor(t/280)%2===0){ctx.strokeStyle="#ff456d";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx+dx*11,cy+dy*11);ctx.lineTo(cx+dx*18,cy+dy*18);ctx.stroke()}
- if(t<nameVisibleUntil){ctx.font="bold 14px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.shadowColor="#111";ctx.shadowBlur=5;ctx.fillText(playerName,cx,y-5);ctx.shadowBlur=0;}
+ ctx.font="bold 14px Arial";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.shadowColor="#111";ctx.shadowBlur=5;ctx.fillText(playerName,cx,y-5);ctx.shadowBlur=0;
 }
 function drawParticles(){
  particles=particles.filter(p=>p.life>0);for(let p of particles){p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--;ctx.globalAlpha=Math.min(1,p.life/25);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
